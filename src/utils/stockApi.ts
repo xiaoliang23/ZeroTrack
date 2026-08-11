@@ -79,20 +79,13 @@ export function saveStoredStocks(stocks: Stock[]) {
 // Fetch helper via CORS Proxy for browser environment
 async function fetchWithProxy(url: string, timeoutMs = 5000): Promise<any> {
   const fetchWithTimeout = async (targetUrl: string) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      try { controller.abort(); } catch {}
-    }, timeoutMs);
-
     try {
-      const res = await fetch(targetUrl, { signal: controller.signal });
+      const res = await fetch(targetUrl, { signal: AbortSignal.timeout(timeoutMs) });
       if (res.ok) {
         return await res.json();
       }
     } catch {
-      // Ignore network / abort errors silently
-    } finally {
-      clearTimeout(timeoutId);
+      // Ignore network / abort / timeout errors silently
     }
     return null;
   };
