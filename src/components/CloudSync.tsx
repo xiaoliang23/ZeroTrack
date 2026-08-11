@@ -6,7 +6,8 @@ import {
   signOut, 
   onAuthStateChanged, 
   User,
-  signInWithPopup 
+  signInWithPopup,
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { 
@@ -72,7 +73,7 @@ interface CloudSyncProps {
   onRemoteUpdate: (data: any) => void;
 }
 
-const getAuthErrorMessage = (code: string) => {
+const getAuthErrorMessage = (code: string, rawMsg?: string) => {
   switch (code) {
     case 'auth/invalid-email':
       return '电子邮箱格式不正确，请检查输入';
@@ -86,16 +87,20 @@ const getAuthErrorMessage = (code: string) => {
       return '该邮箱已被注册，请直接“登录”或使用其他邮箱';
     case 'auth/weak-password':
       return '密码强度不够，请设置至少 6 位字符';
+    case 'auth/operation-not-allowed':
+      return 'Firebase 尚未在控制台启用“邮箱/密码”登录。建议优先使用【Google 一键登录】或无需账号注册的【GitHub Gist 零门槛云同步】！';
+    case 'auth/unauthorized-domain':
+      return '当前访问域名未在 Firebase Auth 允许列表中。请尝试【Google 登录】或【GitHub Gist 云同步】';
     case 'auth/popup-closed-by-user':
       return 'Google 授权登录已被手动取消';
     case 'auth/popup-blocked':
       return '登录弹窗被浏览器拦截，请允许弹窗后重试';
     case 'auth/network-request-failed':
-      return '网络连接异常，请检查网络';
+      return '网络连接异常，请检查网络网络设置';
     case 'auth/too-many-requests':
       return '尝试过于频繁，请稍后再试';
     default:
-      return '认证失败，请重试';
+      return rawMsg ? `认证失败: ${rawMsg}` : '认证失败，请重试';
   }
 };
 
@@ -333,7 +338,8 @@ export default function CloudSync({ data, onRemoteUpdate }: CloudSyncProps) {
         setSuccessMsg('');
       }, 1200);
     } catch (err: any) {
-      setError(getAuthErrorMessage(err.code || ''));
+      console.error("Firebase auth error:", err);
+      setError(getAuthErrorMessage(err.code || '', err.message || ''));
     } finally {
       setLoading(false);
     }
@@ -344,7 +350,7 @@ export default function CloudSync({ data, onRemoteUpdate }: CloudSyncProps) {
     setSuccessMsg('');
     setGoogleLoading(true);
     try {
-      const provider = new (window as any).firebase.auth.GoogleAuthProvider();
+      const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       setSuccessMsg('Google 账号已成功关联同步');
       setTimeout(() => {
@@ -356,7 +362,7 @@ export default function CloudSync({ data, onRemoteUpdate }: CloudSyncProps) {
         console.log('Google sign-in popup was closed by user.');
       } else {
         console.error('Google Auth error:', err);
-        setError(getAuthErrorMessage(err?.code || ''));
+        setError(getAuthErrorMessage(err?.code || '', err?.message || ''));
       }
     } finally {
       setGoogleLoading(false);
