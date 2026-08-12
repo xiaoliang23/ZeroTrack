@@ -674,8 +674,17 @@ export default function CloudSync({ data, onRemoteUpdate }: CloudSyncProps) {
           <GithubIcon size={13} className="text-slate-400 shrink-0" />
         )}
 
-        <span className="text-[10px] font-bold hidden md:inline">
-          {isGithubActive ? `GitHub: @${githubUser?.login}` : activeUser ? (syncStatus === 'syncing' ? '同步中' : '已同步') : '数据同步'}
+        <span className="text-[11px] font-bold inline">
+          {isGithubActive ? (
+            <>
+              <span className="sm:hidden">GitHub</span>
+              <span className="hidden sm:inline">GitHub: @{githubUser?.login}</span>
+            </>
+          ) : activeUser ? (
+            syncStatus === 'syncing' ? '同步中' : '已同步'
+          ) : (
+            '数据同步'
+          )}
         </span>
       </div>
 
@@ -683,11 +692,11 @@ export default function CloudSync({ data, onRemoteUpdate }: CloudSyncProps) {
       {isOpen && (
         <>
           <div 
-            className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px] transition-opacity"
+            className="fixed inset-0 z-[90] bg-black/30 backdrop-blur-[2px] transition-opacity"
             onClick={() => setIsOpen(false)}
           />
 
-          <div className="absolute right-0 top-full mt-2 w-[350px] sm:w-[420px] max-w-[calc(100vw-1.5rem)] bg-theme-card border border-theme-border rounded-2xl md:rounded-3xl shadow-2xl z-[100] p-5 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="fixed inset-x-2 top-14 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-[420px] max-w-[calc(100vw-1rem)] bg-theme-card border border-theme-border rounded-2xl md:rounded-3xl shadow-2xl z-[100] p-4 sm:p-5 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-theme-border">
               <div className="flex items-center gap-2">
